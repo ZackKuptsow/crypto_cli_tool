@@ -1,10 +1,13 @@
+mod ciphers;
+use ciphers::Cipher;
+
 use clap::Parser;
 use std::process;
 
 #[derive(clap::ArgEnum, Clone, Debug)]
 enum Algorithm {
-    #[clap(name = "caeser", alias = "c")]
-    Caeser,
+    #[clap(name = "caesar", alias = "c")]
+    Caesar,
 }
 
 #[derive(clap::ArgEnum, Clone, Debug)]
@@ -12,7 +15,7 @@ enum Direction {
     #[clap(name = "encrypt", alias = "e")]
     Encrypt,
     #[clap(name = "decrypt", alias = "d")]
-    Decrypt
+    Decrypt,
 }
 
 #[derive(Parser, Debug)]
@@ -33,6 +36,8 @@ struct Args {
     // in decryption mode, brute force
     #[clap(short = 'b', long)]
     brute_force: bool,
+
+    input_text: String,
 }
 
 fn main() {
@@ -45,8 +50,16 @@ fn main() {
         process::exit(1); // Exit with a non-zero status code to indicate an error
     }
 
+    let cipher = match args.algorithm {
+        Algorithm::Caesar => ciphers::caesar::CaesarCipher { key: args.key },
+    };
+
+    let output_text = match args.direction {
+        Direction::Encrypt => cipher.encrypt(&args.input_text),
+        Direction::Decrypt => cipher.decrypt(&args.input_text),
+    };
+
     println!("Algorithm: {:?}", args.algorithm);
     println!("Direction: {:?}", args.direction);
-    println!("Key: {}", args.key);
-    println!("Brute Force: {}", args.brute_force);
+    print!("Output: {}\n", output_text);
 }
