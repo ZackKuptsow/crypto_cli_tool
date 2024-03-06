@@ -3,11 +3,14 @@ use ciphers::Cipher;
 
 use clap::Parser;
 use std::process;
+use std::str::FromStr;
 
 #[derive(clap::ArgEnum, Clone, Debug)]
 enum Algorithm {
     #[clap(name = "caesar", alias = "c")]
     Caesar,
+    #[clap(name = "vigenere", alias = "v")]
+    Vigenère,
 }
 
 #[derive(clap::ArgEnum, Clone, Debug)]
@@ -16,6 +19,24 @@ enum Direction {
     Encrypt,
     #[clap(name = "decrypt", alias = "d")]
     Decrypt,
+}
+
+#[derive(Clone, Debug)]
+enum KeyType {
+    Integer(i32),
+    Text(String),
+}
+
+impl FromStr for KeyType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(i) = s.parse::<i32>() {
+            Ok(KeyType::Integer(i))
+        } else {
+            Ok(KeyType::Text(s.to_string()))
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -31,7 +52,7 @@ struct Args {
 
     // encryption/decryption key
     #[clap(short = 'k', long)]
-    key: i32,
+    key: KeyType,
 
     // in decryption mode, brute force
     #[clap(short = 'b', long)]
@@ -43,15 +64,28 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    // check for invalid combination of arguments:
-    // brute force can only be done in decrypt mode
+    // Check for invalid combination of arguments:
+    // Brute force can only be done in decrypt mode
     if args.brute_force && matches!(args.direction, Direction::Encrypt) {
         eprintln!("Error: Brute force mode cannot be used with encryption.");
         process::exit(1); // Exit with a non-zero status code to indicate an error
     }
 
-    let cipher = match args.algorithm {
-        Algorithm::Caesar => ciphers::caesar::CaesarCipher { key: args.key },
+    let cipher: Box<dyn Cipher> = match args.algorithm {
+        Algorithm::Caesar => {
+            if let KeyType::Integer(key) = args.key {
+                Box::new(ciphers::caesar::CaesarCipher { key })
+            } else {
+                panic!("Caesar cipher requires an integer key.");
+            }
+        }
+        Algorithm::Vigenère => {
+            if let KeyType::Text(key) = args.key {
+                Box::new(ciphers::vigenere::VigenereCipher::new(key))
+            } else {
+                panic!("Vigenère cipher requires a text key.");
+            }
+        }
     };
 
     let output_text = match args.direction {

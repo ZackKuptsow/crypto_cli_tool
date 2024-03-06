@@ -1,4 +1,5 @@
 pub mod caesar;
+pub mod vigenere;
 
 pub trait Cipher {
     fn encrypt(&self, plaintext: &str) -> String;
@@ -6,3 +7,4 @@ pub trait Cipher {
 }
 
 pub use caesar::CaesarCipher;
+pub use vigenere::VigenereCipher;
