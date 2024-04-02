@@ -1,4 +1,5 @@
 pub mod caesar;
+pub mod playfair;
 pub mod vigenere;
 
 pub trait Cipher {
@@ -7,4 +8,5 @@ pub trait Cipher {
 }
 
 pub use caesar::CaesarCipher;
+pub use playfair::PlayfairCipher;
 pub use vigenere::VigenereCipher;

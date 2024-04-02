@@ -11,6 +11,8 @@ enum Algorithm {
     Caesar,
     #[clap(name = "vigenere", alias = "v")]
     Vigenère,
+    #[clap(name = "playfair", alias = "p")]
+    Playfair,
 }
 
 #[derive(clap::ArgEnum, Clone, Debug)]
@@ -86,6 +88,13 @@ fn main() {
                 panic!("Vigenère cipher requires a text key.");
             }
         }
+        Algorithm::Playfair => {
+            if let KeyType::Text(key) = args.key {
+                Box::new(ciphers::playfair::PlayfairCipher::new(key))
+            } else {
+                panic!("Playfair cipher requires a text key.")
+            }
+        }
     };
 
     let output_text = match args.direction {
@@ -95,5 +104,5 @@ fn main() {
 
     println!("Algorithm: {:?}", args.algorithm);
     println!("Direction: {:?}", args.direction);
-    print!("Output: {}\n", output_text);
+    println!("Output: {}\n", output_text);
 }
